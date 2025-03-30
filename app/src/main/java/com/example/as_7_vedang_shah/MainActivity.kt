@@ -16,7 +16,7 @@ class MainActivity : AppCompatActivity() {
     //mutable list to add expense name and amount
     private val expensedatalist = mutableListOf<Expense>()
 
-    @SuppressLint("MissingInflatedId", "NotifyDataSetChanged")
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
