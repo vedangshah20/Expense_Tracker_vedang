@@ -1,6 +1,6 @@
 package com.example.as_7_vedang_shah
 
-import android.annotation.SuppressLint
+
 import android.os.Bundle
 import android.widget.Button
 import android.widget.EditText

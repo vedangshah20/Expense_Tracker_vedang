@@ -27,7 +27,6 @@ class ExpenseAdapter(
     }
 
 
-    @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: expenselistholder, position: Int) {
         val expense = expenseList[position]
         holder.ExpenseName.text = expense.name
