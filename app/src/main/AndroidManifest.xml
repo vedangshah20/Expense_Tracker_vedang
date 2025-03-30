@@ -12,6 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.AS_7_Vedang_Shah"
         tools:targetApi="31">
+        <activity android:name=".ExpenseDetailsActivity" />
         <activity
             android:name=".MainActivity"
             android:exported="true">
