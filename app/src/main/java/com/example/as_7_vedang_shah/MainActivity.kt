@@ -10,22 +10,41 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import java.util.*
+import androidx.fragment.app.commit
+
 
 class MainActivity : AppCompatActivity() {
 
-    //RecyclerView and Adapter to display the expense list
+    //recyclerView display the expense list
     private lateinit var expenseRecyclerView: RecyclerView
     private lateinit var expenseAdapter: ExpenseAdapter
     private val expensedatalist = mutableListOf<Expense>()
 
     private lateinit var selectedDateText: TextView
     private var selectedDate: String? = null
+    private var isFooterVisible = false
+    private lateinit var footerFragment: FooterFragment
+
 
     //started when activity is first created
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         Log.d("LIFECYCLE", "onCreate called")
         setContentView(R.layout.activity_main)
+
+        //i was having error in importing commit then i had to add this line in gradle file
+        //implementation "androidx.fragment:fragment-ktx:1.6.2"
+        // Add HeaderFragment dynamically
+        supportFragmentManager.commit {
+            replace(R.id.headerContainer, HeaderFragment())
+        }
+
+        //added  footerfragment dynamically
+        footerFragment = FooterFragment()
+        supportFragmentManager.commit {
+            replace(R.id.footerContainer, footerFragment)
+        }
+        isFooterVisible = true
 
         val expenseNameInput = findViewById<EditText>(R.id.nameInput)
         val editTextExpenseAmount = findViewById<EditText>(R.id.amountInput)
@@ -43,10 +62,11 @@ class MainActivity : AppCompatActivity() {
             onDeleteButton = { position ->
                 expensedatalist.removeAt(position)
                 expenseAdapter.notifyItemRemoved(position)
+                updateFooterTotal()
             },
 
             //explicit intent to show expense details
-            //for this took help from this link :https://developer.android.com/guide/components/intents-filters
+            //for this took help from this link: https://developer.android.com/guide/components/intents-filters
             onItemClick = { expense ->
                 val intent = Intent(this, ExpenseDetailsActivity::class.java)
                 intent.putExtra("name", expense.name)
@@ -58,7 +78,7 @@ class MainActivity : AppCompatActivity() {
 
         expenseRecyclerView.adapter = expenseAdapter
 
-         //date picker
+        //date picker
         datePickerButton.setOnClickListener {
             val calendar = Calendar.getInstance()
             val year = calendar.get(Calendar.YEAR)
@@ -78,7 +98,7 @@ class MainActivity : AppCompatActivity() {
             val name = expenseNameInput.text.toString().trim()
             val amount = editTextExpenseAmount.text.toString().trim().toDoubleOrNull()
 
-             //if name,amount and date is show a message that this field is empty
+            //if name, amount or date is empty show a message
             if (name.isEmpty()) {
                 Toast.makeText(this, "Please enter name of the expense", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
@@ -97,20 +117,26 @@ class MainActivity : AppCompatActivity() {
             //add expense to the list
             expensedatalist.add(Expense(name, amount, selectedDate!!))
             expenseAdapter.notifyItemInserted(expensedatalist.size - 1)
+            updateFooterTotal()
 
-            //clear text field after the data has been added
+            //clear input fields
             expenseNameInput.text.clear()
             editTextExpenseAmount.text.clear()
             selectedDateText.text = "No Date Selected"
             selectedDate = null
         }
 
-        //implicit intent to  show tips
+        //implicit intent to show tips
         tipsButton.setOnClickListener {
             val url = "https://www.canada.ca/en/services/finance.html"
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
             startActivity(intent)
         }
+    }
+
+    private fun updateFooterTotal() {
+        val total = expensedatalist.sumOf { it.amount }
+        footerFragment.updateTotal(total)
     }
 
     override fun onStart() {
