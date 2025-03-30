@@ -1,6 +1,7 @@
 package com.example.as_7_vedang_shah
 
 import android.app.DatePickerDialog
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -11,7 +12,15 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import java.util.*
 import androidx.fragment.app.commit
+//Gson Import
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import java.io.File
+import java.io.FileNotFoundException
+import java.io.IOException
 
+
+private const val FILE_NAME = "expenses.json"
 
 class MainActivity : AppCompatActivity() {
 
@@ -56,6 +65,10 @@ class MainActivity : AppCompatActivity() {
         //recyclerView
         expenseRecyclerView = findViewById(R.id.recyclerView)
         expenseRecyclerView.layoutManager = LinearLayoutManager(this)
+
+        //load saved expenses from file
+        expensedatalist.clear()
+        expensedatalist.addAll(loadExpensesFromFile())
 
         expenseAdapter = ExpenseAdapter(
             expensedatalist,
@@ -118,8 +131,10 @@ class MainActivity : AppCompatActivity() {
             expensedatalist.add(Expense(name, amount, selectedDate!!))
             expenseAdapter.notifyItemInserted(expensedatalist.size - 1)
             updateFooterTotal()
+            saveExpensesToFile()
 
             //clear input fields
+            // Load saved expenses from file
             expenseNameInput.text.clear()
             editTextExpenseAmount.text.clear()
             selectedDateText.text = "No Date Selected"
@@ -137,6 +152,38 @@ class MainActivity : AppCompatActivity() {
     private fun updateFooterTotal() {
         val total = expensedatalist.sumOf { it.amount }
         footerFragment.updateTotal(total)
+    }
+
+    private fun saveExpensesToFile() {
+        try {
+            val json = Gson().toJson(expensedatalist)
+            openFileOutput(FILE_NAME, Context.MODE_PRIVATE).use { output ->
+                output.write(json.toByteArray())
+            }
+            Log.d("FileStorage", "Expenses saved successfully")
+        } catch (e: IOException) {
+            Log.e("FileStorage", "Error saving expenses: ${e.message}")
+        }
+    }
+
+    private fun loadExpensesFromFile(): MutableList<Expense> {
+        val Savedlist = mutableListOf<Expense>()
+        try {
+            val file = File(filesDir, FILE_NAME)
+            if (!file.exists()) return Savedlist
+
+            val json = file.readText()
+            val type = object : TypeToken<List<Expense>>() {}.type
+            val loadedExp: List<Expense> = Gson().fromJson(json, type)
+            Savedlist.addAll(loadedExp)
+
+            Log.d("FileStorage", "Expenses loaded successfully")
+        } catch (e: FileNotFoundException) {
+            Log.e("FileStorage", "File not found: ${e.message}")
+        } catch (e: IOException) {
+            Log.e("FileStorage", "Error reading file: ${e.message}")
+        }
+        return Savedlist
     }
 
     override fun onStart() {

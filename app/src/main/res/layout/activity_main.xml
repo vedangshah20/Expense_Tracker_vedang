@@ -8,22 +8,11 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-    <!-- Header Fragment Container -->
+
     <FrameLayout
         android:id="@+id/headerContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content" />
-
-    <!-- Input Fields -->
-    <TextView
-        android:id="@+id/textView2"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:fontFamily="sans-serif-black"
-        android:text="Expense Tracker App"
-        android:textSize="24sp"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="20dp" />
 
     <EditText
         android:id="@+id/nameInput"
@@ -65,7 +54,6 @@
         android:layout_gravity="center_horizontal"
         android:layout_marginBottom="16dp" />
 
-    <!-- RecyclerView that scrolls -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
@@ -73,7 +61,6 @@
         android:layout_weight="1"
         android:padding="8dp" />
 
-    <!-- Bottom Buttons and Footer Fragment -->
     <Button
         android:id="@+id/tipsButton"
         android:layout_width="wrap_content"
@@ -82,7 +69,6 @@
         android:layout_margin="12dp"
         android:layout_gravity="center_horizontal" />
 
-    <!-- Footer Fragment Container -->
     <FrameLayout
         android:id="@+id/footerContainer"
         android:layout_width="match_parent"
