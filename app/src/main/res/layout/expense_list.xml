@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="15dp"
+    android:gravity="center_vertical"
+    tools:context=".ExpenseListFragment">
+
+    <!-- Header Fragment -->
+    <FrameLayout
+        android:id="@+id/headerContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textAlignment="center" />
+
+    <!-- Expense Input Section -->
+    <TableLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        >
+
+
+        <EditText
+            android:id="@+id/nameInput"
+            android:layout_width="362dp"
+            android:layout_height="wrap_content"
+            android:hint="Expense Name"
+            android:inputType="text" />
+
+        <TableRow>
+
+            <EditText
+                android:id="@+id/amountInput"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Enter Amount"
+                android:inputType="numberDecimal" />
+        </TableRow>
+
+        <TableRow>
+
+            <Button
+                android:id="@+id/pickDateButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="8dp"
+                android:text="Pick Date" />
+        </TableRow>
+
+        <TableRow>
+            <TextView
+                android:id="@+id/selectedDateText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="No date selected"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginBottom="8dp" />
+        </TableRow>
+
+        <TableRow>
+
+            <Button
+                android:id="@+id/submitButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="12dp"
+                android:layout_marginBottom="16dp"
+                android:text="Add Expense" />
+        </TableRow>
+
+    </TableLayout>
+
+    <!-- RecyclerView for displaying expenses -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <!-- Financial Tips Button -->
+    <Button
+        android:id="@+id/tipsButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Financial Tips"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="12dp" />
+
+    <!-- Footer Fragment -->
+    <FrameLayout
+        android:id="@+id/footerContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+</LinearLayout>
