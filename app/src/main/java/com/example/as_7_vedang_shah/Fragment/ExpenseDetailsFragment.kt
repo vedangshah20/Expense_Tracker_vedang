@@ -22,39 +22,40 @@ class ExpenseDetailsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val textViewName = view.findViewById<TextView>(R.id.expenseNameDetail)
+        val textViewAmount = view.findViewById<TextView>(R.id.expenseAmountDetail)
+        val textViewDate = view.findViewById<TextView>(R.id.expenseDateDetail)
+        val textViewCurrency = view.findViewById<TextView>(R.id.expenseCurrencyDetail)
+        val textViewConvertedCost = view.findViewById<TextView>(R.id.expenseConvertedDetail)
 
-        val expenseNameTextView = view.findViewById<TextView>(R.id.expenseNameDetail)
-        val expenseOriginalAmountTextView = view.findViewById<TextView>(R.id.expenseAmountDetail)
-        val expenseDateTextView = view.findViewById<TextView>(R.id.expenseDateDetail)
-        val expenseCurrencyTextView = view.findViewById<TextView>(R.id.expenseCurrencyDetail)
-        val expenseConvertedCostTextView = view.findViewById<TextView>(R.id.expenseConvertedDetail)
+        val name = arguments?.getString("name")
+        val amount = arguments?.getDouble("amount")
+        val date = arguments?.getString("date")
+        val currency = arguments?.getString("expense_currency")
+        val convertedCost = arguments?.getDouble("expense_converted_cost") ?: amount
 
-
-        val expenseName = arguments?.getString("name")
-        val expenseOriginalAmount = arguments?.getDouble("amount")
-        val expenseDate = arguments?.getString("date")
-        val expenseCurrency = arguments?.getString("expense_currency")
-        val expenseConvertedCost = arguments?.getDouble("expense_converted_cost") ?: expenseOriginalAmount
 
         arguments?.clear()
 
-        expenseNameTextView.text = "Expense Name: $expenseName"
-        expenseOriginalAmountTextView.text = "Expense Original Amount: $expenseOriginalAmount CAD"
-        expenseDateTextView.text = "Expense Date: $expenseDate"
-        expenseCurrencyTextView.text = "Currency: $expenseCurrency"
+        textViewName.text = "Expense Name: $name"
+        textViewAmount.text = "Expense Original Amount: $amount CAD"
+        textViewDate.text = "Expense Date: $date"
+        textViewCurrency.text = "Currency: $currency"
 
-        if (expenseConvertedCost != expenseOriginalAmount && expenseCurrency != "CAD") {
-            expenseConvertedCostTextView.text = "Converted Cost: ${ FormateForConvAmount(expenseConvertedCost, expenseCurrency)}"
+        if (convertedCost != amount && currency != "CAD") {
+            textViewConvertedCost.text = "Converted Cost: ${FormateForConvCurrecy(convertedCost, currency)}"
         } else {
-            expenseConvertedCostTextView.text = "Converted Cost: $expenseConvertedCost $expenseCurrency"
+            textViewConvertedCost.text = "Converted Cost: $convertedCost $currency"
         }
     }
 
-    private fun  FormateForConvAmount(amount: Double?, currency: String?): String {
+    private fun FormateForConvCurrecy(amount: Double?, currency: String?): String {
         return when (currency?.uppercase()) {
-            "CAD" -> "$amount CAD"
+            "CAD" -> "${amount} CAD"
+            "ISK" -> "$amount kr"
             "INR" -> "$amount INR"
             "JPY" -> "$amount JPY"
+            "RUB" -> "$amount RUB"
             "USD" -> "$amount USD"
             else -> "$amount $currency"
         }
