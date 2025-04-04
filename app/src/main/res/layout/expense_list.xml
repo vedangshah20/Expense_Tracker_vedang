@@ -39,6 +39,31 @@
                 android:inputType="numberDecimal" />
         </TableRow>
 
+
+        <TableRow>
+            <Switch
+                android:id="@+id/currencyConvSwitch"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Conversion Needed" />
+        </TableRow>
+
+        <TableRow>
+            <Spinner
+                android:id="@+id/spinnerCurrency"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+        </TableRow>
+
+        <TableRow>
+            <TextView
+                android:id="@+id/CurrencyConvText"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Converted Cost:"
+                android:paddingTop="8dp" />
+        </TableRow>
+
         <TableRow>
 
             <Button
