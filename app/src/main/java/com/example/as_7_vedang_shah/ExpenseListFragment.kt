@@ -1,5 +1,6 @@
 package com.example.as_7_vedang_shah
 
+import android.annotation.SuppressLint
 import android.app.DatePickerDialog
 import android.content.Context
 import android.content.Intent
@@ -12,11 +13,16 @@ import android.view.ViewGroup
 import android.widget.*
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
@@ -139,6 +145,132 @@ class ExpenseListFragment : Fragment() {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
             startActivity(intent)
         }
+        @SuppressLint("SetTextI18n", "NotifyDataSetChanged")
+        private fun currencyConv(UserGivenCurrency: String) {
+            lifecycleScope.launch {
+                try {
+                    val currencyResponse = withContext(Dispatchers.IO) {
+                        RetrofitInstance.api.getExchangeRates()
+                    }
+
+                    val SelectedCurrencyConvRate = currencyResponse.cad[UserGivenCurrency.lowercase()] ?: 1.0
+
+                    for (index in expenseList.indices) {
+                        val item = expenseList[index]
+                        expenseList[index] = Expense(
+                            item.name,
+                            item.amount,
+                            item.date,
+                            UserGivenCurrency,
+                            item.amount * SelectedCurrencyConvRate
+                        )
+                    }
+
+                    expenseAdapter.notifyDataSetChanged()
+                    CurrencyConvText.text =
+                        "Converted Cost: ${expenseList.sumOf { it.convertedCost }} ${UserGivenCurrency.uppercase()}"
+
+                } catch (e: Exception) {
+                    Snackbar.make(requireView(), "Failed to convert: ${e.message}", Snackbar.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        private fun loadSupportedCurrencies() {
+            lifecycleScope.launch {
+                try {
+                    val simpleMap = withContext(Dispatchers.IO) {
+                        RetrofitInstance.api.getCurrencies()
+                    }
+
+                    if (simpleMap.isNotEmpty()) {
+                        val avaliablecurrency = simpleMap.keys.sorted()
+                        val currencyAdapter = ArrayAdapter(
+                            requireContext(),
+                            android.R.layout.simple_spinner_item,
+                            avaliablecurrency
+                        )
+                        currencyAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                        spinnerCurrency.adapter = currencyAdapter
+
+                        val defaultcadcurrency = avaliablecurrency.indexOf("cad")
+                        if (defaultcadcurrency != -1) {
+                            spinnerCurrency.setSelection(defaultcadcurrency)
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("CurrencyLoadError", e.message.toString())
+                    Snackbar.make(requireView(), "Could not load currencies", Snackbar.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        @SuppressLint("SetTextI18n", "NotifyDataSetChanged")
+        private fun newcurrencySelected(avaliablecur: String) {
+            lifecycleScope.launch {
+                try {
+                    val response = withContext(Dispatchers.IO) {
+                        RetrofitInstance.api.getExchangeRates()
+                    }
+
+                    val rate = response.cad[avaliablecur.lowercase()] ?: 1.0
+
+                    expenseList.forEachIndexed { idx, item ->
+                        expenseList[idx] = Expense(
+                            item.name,
+                            item.amount,
+                            item.date,
+                            avaliablecur,
+                            item.amount * rate
+                        )
+                    }
+
+                    expenseAdapter.notifyDataSetChanged()
+                    CurrencyConvText.text =
+                        "Converted Cost: ${expenseList.sumOf { it.convertedCost }} ${avaliablecur.uppercase()}"
+                } catch (e: Exception) {
+                    Snackbar.make(requireView(), "Rate fetch failed: ${e.message}", Snackbar.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+//toggle listener for currency conversion switch
+        currencyConvSwitch.setOnCheckedChangeListener { _, enabled ->
+            if (enabled) {
+                val chosenCurrency = spinnerCurrency.selectedItem?.toString() ?: "cad"
+                currencyConv(chosenCurrency)
+            } else {
+                for (index in expenseList.indices) {
+                    val original = expenseList[index]
+                    expenseList[index] = Expense(
+                        original.name,
+                        original.amount,
+                        original.date,
+                        "cad",
+                        original.amount
+                    )
+                }
+                expenseAdapter.notifyDataSetChanged()
+                CurrencyConvText.text = "Converted Cost: ${expenseList.sumOf { it.amount }} CAD"
+            }
+        }
+
+//listener for currency selection from dropdown
+        spinnerCurrency.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(
+                parent: AdapterView<*>?, view: View?, pos: Int, id: Long
+            ) {
+                if (currencyConvSwitch.isChecked) {
+                    val activeCurrency = spinnerCurrency.selectedItem.toString()
+                    newcurrencySelected(activeCurrency)
+                }
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+
+            }
+        }
+
     }
 
     private fun updateFooterTotal() {
