@@ -1,5 +1,6 @@
-package com.example.as_7_vedang_shah
+package com.example.as_7_vedang_shah.adapter
 
+import android.annotation.SuppressLint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -8,9 +9,15 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.navigation.NavController
 import androidx.recyclerview.widget.RecyclerView
-import java.util.Currency
+import com.example.as_7_vedang_shah.R
 
-data class Expense(val name: String, val amount: Double, val date: String,val currency: Currency,val convertedCost: Double)
+data class Expense(
+    val name: String,
+    val amount: Double,
+    val date: String,
+    val currency: String,
+    val convertedCost: Double
+)
 
 class ExpenseAdapter(
     private val expenseList: MutableList<Expense>,
@@ -32,20 +39,21 @@ class ExpenseAdapter(
         return ExpenseListHolder(view)
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onBindViewHolder(holder: ExpenseListHolder, position: Int) {
         val expense = expenseList[position]
         holder.expenseName.text = expense.name
-        holder.expenseAmount.text = "Original: $${expense.amount} ${expense.currency.currencyCode}\n" +
-                "Converted: %.2f %s".format(expense.convertedCost, expense.currency.currencyCode)
+        holder.expenseAmount.text = "Original: ${expense.amount} CAD\n" +
+                "Converted: %.2f %s".format(expense.convertedCost, expense.currency)
         holder.expenseDate.text = expense.date
 
-        // Show Details button
         holder.showDetailsButton.setOnClickListener {
             val bundle = Bundle().apply {
                 putString("name", expense.name)
-                putString("amount", expense.amount.toString())
-                putString("expense_currency", expense.currency.currencyCode)
+                putDouble("amount", expense.amount)
+                putString("expense_currency", expense.currency)
                 putString("date", expense.date)
+                putDouble("expense_converted_cost", expense.convertedCost)
             }
             navController.navigate(R.id.action_expenseListFragment_to_expenseDetailsFragment, bundle)
         }

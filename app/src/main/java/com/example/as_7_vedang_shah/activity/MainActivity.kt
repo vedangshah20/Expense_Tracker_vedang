@@ -1,10 +1,11 @@
-package com.example.as_7_vedang_shah
+package com.example.as_7_vedang_shah.activity
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupActionBarWithNavController
+import com.example.as_7_vedang_shah.R
 
 class MainActivity : AppCompatActivity() {
     private lateinit var navController: NavController
@@ -17,7 +18,7 @@ class MainActivity : AppCompatActivity() {
 
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.fragmentContainer) as NavHostFragment
-        val navController = navHostFragment.navController
+        navController = navHostFragment.navController
         setupActionBarWithNavController(navController)
     }
 

@@ -28,4 +28,20 @@
         android:layout_height="wrap_content"
         android:text="Date:"
         android:textSize="20sp" />
+
+    <TextView
+    android:id="@+id/expenseCurrencyDetail"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Currency:"
+    android:textSize="20sp"
+    android:layout_marginBottom="12dp" />
+
+    <!-- New: Converted Cost -->
+    <TextView
+        android:id="@+id/expenseConvertedDetail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Converted Cost:"
+        android:textSize="20sp" />
 </LinearLayout>

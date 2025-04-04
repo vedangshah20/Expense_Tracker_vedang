@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/expenseListFragment"
-        android:name="com.example.as_7_vedang_shah.ExpenseListFragment"
+        android:name="com.example.as_7_vedang_shah.Fragment.ExpenseListFragment"
         android:label="Expense List"
         android:layout_marginTop="90dp"
         tools:layout="@layout/expense_list">
@@ -21,7 +21,7 @@
 
     <fragment
         android:id="@+id/expenseDetailsFragment"
-        android:name="com.example.as_7_vedang_shah.ExpenseDetailsFragment"
+        android:name="com.example.as_7_vedang_shah.Fragment.ExpenseDetailsFragment"
         android:label="Expense Details"
         tools:layout="@layout/expense_details" >
 

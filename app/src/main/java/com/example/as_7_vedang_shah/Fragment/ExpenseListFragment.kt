@@ -1,4 +1,4 @@
-package com.example.as_7_vedang_shah
+package com.example.as_7_vedang_shah.Fragment
 
 import android.annotation.SuppressLint
 import android.app.DatePickerDialog
@@ -10,13 +10,26 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.*
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
+import android.widget.Button
+import android.widget.EditText
+import android.widget.Spinner
+import android.widget.Switch
+import android.widget.TextView
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.commit
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.example.as_7_vedang_shah.adapter.Expense
+import com.example.as_7_vedang_shah.adapter.ExpenseAdapter
+
+import com.example.as_7_vedang_shah.R
+import com.example.as_7_vedang_shah.network.RetrofitInstance
+import com.google.android.material.materialswitch.MaterialSwitch
 import com.google.android.material.snackbar.Snackbar
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -26,9 +39,8 @@ import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
-import java.util.*
-
-private const val FILE_NAME = "expenses.json"
+import java.util.Calendar
+private const val FILE_NAME = "expenses.txt"
 
 class ExpenseListFragment : Fragment() {
 
@@ -47,13 +59,13 @@ class ExpenseListFragment : Fragment() {
         return inflater.inflate(R.layout.expense_list, container, false)
     }
 
+    @SuppressLint("SetTextI18n", "NotifyDataSetChanged")
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         requireActivity().supportFragmentManager.commit {
             replace(R.id.headerContainer, HeaderFragment())
         }
-
 
         footerFragment = FooterFragment()
         requireActivity().supportFragmentManager.commit {
@@ -62,7 +74,6 @@ class ExpenseListFragment : Fragment() {
 
         val navController = findNavController()
 
-
         val expenseNameInput = view.findViewById<EditText>(R.id.nameInput)
         val editTextExpenseAmount = view.findViewById<EditText>(R.id.amountInput)
         val buttontoaddexpense = view.findViewById<Button>(R.id.submitButton)
@@ -70,13 +81,18 @@ class ExpenseListFragment : Fragment() {
         selectedDateText = view.findViewById(R.id.selectedDateText)
         val tipsButton = view.findViewById<Button>(R.id.tipsButton)
 
-        //recyclerView
+
+        val currencyConvSwitch = view.findViewById<MaterialSwitch>(R.id.currencyConvSwitch)
+        val spinnerCurrency = view.findViewById<Spinner>(R.id.spinnerCurrency)
+        val CurrencyConvText = view.findViewById<TextView>(R.id.CurrencyConvText)
+
+
+        loadSupportedCurrencies(spinnerCurrency)
+
         expenseRecyclerView = view.findViewById(R.id.recyclerView)
         expenseRecyclerView.layoutManager = LinearLayoutManager(requireContext())
-
         expensedatalist.clear()
         expensedatalist.addAll(loadExpensesFromFile())
-
 
         expenseAdapter = ExpenseAdapter(
             expenseList = expensedatalist,
@@ -92,22 +108,21 @@ class ExpenseListFragment : Fragment() {
         expenseRecyclerView.adapter = expenseAdapter
         updateFooterTotal()
 
-        //date Picker
         datePickerButton.setOnClickListener {
             val calendar = Calendar.getInstance()
             val year = calendar.get(Calendar.YEAR)
             val month = calendar.get(Calendar.MONTH)
             val day = calendar.get(Calendar.DAY_OF_MONTH)
 
-            val datePickerDialog = DatePickerDialog(requireContext(), { _, selectedYear, selectedMonth, selectedDay ->
-                selectedDate = "$selectedDay/${selectedMonth + 1}/$selectedYear"
-                selectedDateText.text = selectedDate
-            }, year, month, day)
+            val datePickerDialog =
+                DatePickerDialog(requireContext(), { _, selectedYear, selectedMonth, selectedDay ->
+                    selectedDate = "$selectedDay/${selectedMonth + 1}/$selectedYear"
+                    selectedDateText.text = selectedDate
+                }, year, month, day)
 
             datePickerDialog.show()
         }
 
-        //add new expense
         buttontoaddexpense.setOnClickListener {
             val name = expenseNameInput.text.toString().trim()
             val amount = editTextExpenseAmount.text.toString().trim().toDoubleOrNull()
@@ -127,19 +142,18 @@ class ExpenseListFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            expensedatalist.add(Expense(name, amount, selectedDate!!))
+            expensedatalist.add(Expense(name, amount, selectedDate!!, "CAD", amount))
+
             expenseAdapter.notifyItemInserted(expensedatalist.size - 1)
             updateFooterTotal()
             saveExpensesToFile()
 
-            //clear inputs
             expenseNameInput.text.clear()
             editTextExpenseAmount.text.clear()
             selectedDateText.text = "No Date Selected"
             selectedDate = null
         }
 
-        //tip link
         tipsButton.setOnClickListener {
             val url = "https://www.canada.ca/en/services/finance.html"
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
@@ -147,136 +161,136 @@ class ExpenseListFragment : Fragment() {
         }
 
 
-        //toggle listener for currency conversion switch
         currencyConvSwitch.setOnCheckedChangeListener { _, enabled ->
             if (enabled) {
                 val chosenCurrency = spinnerCurrency.selectedItem?.toString() ?: "cad"
-                currencyConv(chosenCurrency)
+                currencyConv(chosenCurrency, CurrencyConvText)
             } else {
-                for (index in expenseList.indices) {
-                    val original = expenseList[index]
-                    expenseList[index] = Expense(
+                for (index in expensedatalist.indices) {
+                    val original = expensedatalist[index]
+                    expensedatalist[index] = Expense(
                         original.name,
                         original.amount,
                         original.date,
-                        "cad",
+                        "CAD",
                         original.amount
                     )
                 }
                 expenseAdapter.notifyDataSetChanged()
-                CurrencyConvText.text = "Converted Cost: ${expenseList.sumOf { it.amount }} CAD"
+                CurrencyConvText.text = "Converted Cost: ${expensedatalist.sumOf { it.amount }} CAD"
             }
         }
 
-//listener for currency selection from dropdown
+
         spinnerCurrency.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(
                 parent: AdapterView<*>?, view: View?, pos: Int, id: Long
             ) {
                 if (currencyConvSwitch.isChecked) {
                     val activeCurrency = spinnerCurrency.selectedItem.toString()
-                    newcurrencySelected(activeCurrency)
+                    newcurrencySelected(activeCurrency, CurrencyConvText)
                 }
             }
 
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+    }
 
-        @SuppressLint("SetTextI18n", "NotifyDataSetChanged")
-        private fun currencyConv(UserGivenCurrency: String) {
-            lifecycleScope.launch {
-                try {
-                    val currencyResponse = withContext(Dispatchers.IO) {
-                        RetrofitInstance.api.getExchangeRates()
-                    }
 
-                    val SelectedCurrencyConvRate = currencyResponse.cad[UserGivenCurrency.lowercase()] ?: 1.0
 
-                    for (index in expenseList.indices) {
-                        val item = expenseList[index]
-                        expenseList[index] = Expense(
-                            item.name,
-                            item.amount,
-                            item.date,
-                            UserGivenCurrency,
-                            item.amount * SelectedCurrencyConvRate
-                        )
-                    }
-
-                    expenseAdapter.notifyDataSetChanged()
-                    CurrencyConvText.text =
-                        "Converted Cost: ${expenseList.sumOf { it.convertedCost }} ${UserGivenCurrency.uppercase()}"
-
-                } catch (e: Exception) {
-                    Snackbar.make(requireView(), "Failed to convert: ${e.message}", Snackbar.LENGTH_SHORT).show()
+    @SuppressLint("SetTextI18n", "NotifyDataSetChanged")
+    private fun currencyConv(userGivenCurrency: String, textView: TextView) {
+        lifecycleScope.launch {
+            try {
+                val currencyResponse = withContext(Dispatchers.IO) {
+                    RetrofitInstance.api.getExchangeRates()
                 }
-            }
-        }
 
-        private fun loadSupportedCurrencies() {
-            lifecycleScope.launch {
-                try {
-                    val fetchedCurrencyList = withContext(Dispatchers.IO) {
-                        RetrofitInstance.api.getCurrencies()
-                    }
+                val selectedCurrencyConvRate = currencyResponse.cad[userGivenCurrency.lowercase()] ?: 1.0
 
-                    if (fetchedCurrencyList.isNotEmpty()) {
-                        val avaliablecurrency = fetchedCurrencyList.keys.sorted()
-                        val currencyAdapter = ArrayAdapter(
-                            requireContext(),
-                            android.R.layout.simple_spinner_item,
-                            avaliablecurrency
-                        )
-                        currencyAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-                        spinnerCurrency.adapter = currencyAdapter
-
-                        val defaultcadcurrency = avaliablecurrency.indexOf("cad")
-                        if (defaultcadcurrency != -1) {
-                            spinnerCurrency.setSelection(defaultcadcurrency)
-                        }
-                    }
-                } catch (e: Exception) {
-                    Log.e("CurrencyLoadError", e.message.toString())
-                    Snackbar.make(requireView(), "Could not load currencies", Snackbar.LENGTH_SHORT).show()
+                for (index in expensedatalist.indices) {
+                    val item = expensedatalist[index]
+                    expensedatalist[index] = Expense(
+                        item.name,
+                        item.amount,
+                        item.date,
+                        userGivenCurrency.uppercase(),
+                        item.amount * selectedCurrencyConvRate
+                    )
                 }
+
+                expenseAdapter.notifyDataSetChanged()
+                textView.text =
+                    "Converted Cost: ${expensedatalist.sumOf { it.convertedCost }} ${userGivenCurrency.uppercase()}"
+
+            } catch (e: Exception) {
+                Snackbar.make(
+                    requireView(),
+                    "Failed to convert: ${e.message}",
+                    Snackbar.LENGTH_SHORT
+                ).show()
             }
         }
+    }
 
 
-        @SuppressLint("SetTextI18n", "NotifyDataSetChanged")
-        private fun newcurrencySelected(avaliablecur: String) {
-            lifecycleScope.launch {
-                try {
-                    val response = withContext(Dispatchers.IO) {
-                        RetrofitInstance.api.getExchangeRates()
-                    }
-
-                    val rate = response.cad[avaliablecur.lowercase()] ?: 1.0
-
-                    expenseList.forEachIndexed { idx, item ->
-                        expenseList[idx] = Expense(
-                            item.name,
-                            item.amount,
-                            item.date,
-                            avaliablecur,
-                            item.amount * rate
-                        )
-                    }
-
-                    expenseAdapter.notifyDataSetChanged()
-                    CurrencyConvText.text =
-                        "Converted Cost: ${expenseList.sumOf { it.convertedCost }} ${avaliablecur.uppercase()}"
-                } catch (e: Exception) {
-                    Snackbar.make(requireView(), "Rate fetch failed: ${e.message}", Snackbar.LENGTH_SHORT).show()
+    private fun loadSupportedCurrencies(spinner: Spinner) {
+        lifecycleScope.launch {
+            try {
+                val fetchedCurrencyList = withContext(Dispatchers.IO) {
+                    RetrofitInstance.api.getCurrencies()
                 }
+
+                if (fetchedCurrencyList.isNotEmpty()) {
+                    val availableCodes = fetchedCurrencyList.keys.sorted()
+                    val currencyAdapter = ArrayAdapter(
+                        requireContext(),
+                        android.R.layout.simple_spinner_item,
+                        availableCodes
+                    )
+                    currencyAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                    spinner.adapter = currencyAdapter
+
+                    val defaultIndex = availableCodes.indexOf("cad")
+                    if (defaultIndex != -1) {
+                        spinner.setSelection(defaultIndex)
+                    }
+                }
+            } catch (e: Exception) {
+                Snackbar.make(requireView(), "Could not load currencies", Snackbar.LENGTH_SHORT).show()
             }
         }
+    }
 
 
-
-            override fun onNothingSelected(parent: AdapterView<*>?) {
-
+    @SuppressLint("SetTextI18n", "NotifyDataSetChanged")
+    private fun newcurrencySelected(availableCur: String, textView: TextView) {
+        lifecycleScope.launch {
+            try {
+                val response = withContext(Dispatchers.IO) {
+                    RetrofitInstance.api.getExchangeRates()
+                }
+                val rate = response.cad[availableCur.lowercase()] ?: 1.0
+                expensedatalist.forEachIndexed { idx, item ->
+                    expensedatalist[idx] = Expense(
+                        item.name,
+                        item.amount,
+                        item.date,
+                        availableCur.uppercase(),
+                        item.amount * rate
+                    )
+                }
+                expenseAdapter.notifyDataSetChanged()
+                textView.text =
+                    "Converted Cost: ${expensedatalist.sumOf { it.convertedCost }} ${availableCur.uppercase()}"
+            } catch (e: Exception) {
+                Snackbar.make(
+                    requireView(),
+                    "Rate fetch failed: ${e.message}",
+                    Snackbar.LENGTH_SHORT
+                ).show()
             }
         }
-
     }
 
     private fun updateFooterTotal() {
@@ -284,19 +298,16 @@ class ExpenseListFragment : Fragment() {
         footerFragment.updateTotal(total)
     }
 
-    //save expense data to the json file
     private fun saveExpensesToFile() {
         try {
             val json = Gson().toJson(expensedatalist)
             requireContext().openFileOutput(FILE_NAME, Context.MODE_PRIVATE).use {
                 it.write(json.toByteArray())
             }
-            Log.d("FileStorage", "Expenses saved successfully")
         } catch (e: IOException) {
             Log.e("FileStorage", "Error saving expenses: ${e.message}")
         }
     }
-
 
     private fun loadExpensesFromFile(): MutableList<Expense> {
         val savedList = mutableListOf<Expense>()
@@ -308,38 +319,11 @@ class ExpenseListFragment : Fragment() {
             val type = object : TypeToken<List<Expense>>() {}.type
             val loadedExpenses: List<Expense> = Gson().fromJson(json, type)
             savedList.addAll(loadedExpenses)
-
-            Log.d("FileStorage", "Expenses loaded successfully")
         } catch (e: FileNotFoundException) {
             Log.e("FileStorage", "File not found: ${e.message}")
         } catch (e: IOException) {
             Log.e("FileStorage", "Error reading file: ${e.message}")
         }
         return savedList
-    }
-
-    override fun onStart() {
-        super.onStart()
-        Log.d("ActivityLifecycle", "onStart called")
-    }
-
-    override fun onResume() {
-        super.onResume()
-        Log.d("ActivityLifecycle", "onResume called")
-    }
-
-    override fun onPause() {
-        super.onPause()
-        Log.d("ActivityLifecycle", "onPause called")
-    }
-
-    override fun onStop() {
-        super.onStop()
-        Log.d("ActivityLifecycle", "onStop called")
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        Log.d("ActivityLifecycle", "onDestroy called")
     }
 }

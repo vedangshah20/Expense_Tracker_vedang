@@ -6,23 +6,23 @@
     android:orientation="vertical"
     android:padding="15dp"
     android:gravity="center_vertical"
-    tools:context=".ExpenseListFragment">
+    tools:context=".Fragment.ExpenseListFragment">
 
-    <!-- Header Fragment -->
+
     <FrameLayout
         android:id="@+id/headerContainer"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:textAlignment="center" />
 
-    <!-- Expense Input Section -->
+
     <TableLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         >
 
 
-        <EditText
+        <com.google.android.material.textfield.TextInputLayout
             android:id="@+id/nameInput"
             android:layout_width="362dp"
             android:layout_height="wrap_content"
@@ -31,7 +31,7 @@
 
         <TableRow>
 
-            <EditText
+            <com.google.android.material.textfield.TextInputLayout
                 android:id="@+id/amountInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -41,7 +41,7 @@
 
 
         <TableRow>
-            <Switch
+            <com.google.android.material.materialswitch.MaterialSwitch
                 android:id="@+id/currencyConvSwitch"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -56,7 +56,7 @@
         </TableRow>
 
         <TableRow>
-            <TextView
+            <com.google.android.material.textview.MaterialTextView
                 android:id="@+id/CurrencyConvText"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -66,7 +66,7 @@
 
         <TableRow>
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/pickDateButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -87,7 +87,7 @@
 
         <TableRow>
 
-            <Button
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/submitButton"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -99,15 +99,15 @@
 
     </TableLayout>
 
-    <!-- RecyclerView for displaying expenses -->
+
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1" />
 
-    <!-- Financial Tips Button -->
-    <Button
+
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/tipsButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
@@ -116,7 +116,7 @@
         android:layout_marginTop="8dp"
         android:layout_marginBottom="12dp" />
 
-    <!-- Footer Fragment -->
+
     <FrameLayout
         android:id="@+id/footerContainer"
         android:layout_width="match_parent"
