@@ -145,6 +145,41 @@ class ExpenseListFragment : Fragment() {
             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
             startActivity(intent)
         }
+
+
+        //toggle listener for currency conversion switch
+        currencyConvSwitch.setOnCheckedChangeListener { _, enabled ->
+            if (enabled) {
+                val chosenCurrency = spinnerCurrency.selectedItem?.toString() ?: "cad"
+                currencyConv(chosenCurrency)
+            } else {
+                for (index in expenseList.indices) {
+                    val original = expenseList[index]
+                    expenseList[index] = Expense(
+                        original.name,
+                        original.amount,
+                        original.date,
+                        "cad",
+                        original.amount
+                    )
+                }
+                expenseAdapter.notifyDataSetChanged()
+                CurrencyConvText.text = "Converted Cost: ${expenseList.sumOf { it.amount }} CAD"
+            }
+        }
+
+//listener for currency selection from dropdown
+        spinnerCurrency.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(
+                parent: AdapterView<*>?, view: View?, pos: Int, id: Long
+            ) {
+                if (currencyConvSwitch.isChecked) {
+                    val activeCurrency = spinnerCurrency.selectedItem.toString()
+                    newcurrencySelected(activeCurrency)
+                }
+            }
+
+
         @SuppressLint("SetTextI18n", "NotifyDataSetChanged")
         private fun currencyConv(UserGivenCurrency: String) {
             lifecycleScope.launch {
@@ -179,12 +214,12 @@ class ExpenseListFragment : Fragment() {
         private fun loadSupportedCurrencies() {
             lifecycleScope.launch {
                 try {
-                    val simpleMap = withContext(Dispatchers.IO) {
+                    val fetchedCurrencyList = withContext(Dispatchers.IO) {
                         RetrofitInstance.api.getCurrencies()
                     }
 
-                    if (simpleMap.isNotEmpty()) {
-                        val avaliablecurrency = simpleMap.keys.sorted()
+                    if (fetchedCurrencyList.isNotEmpty()) {
+                        val avaliablecurrency = fetchedCurrencyList.keys.sorted()
                         val currencyAdapter = ArrayAdapter(
                             requireContext(),
                             android.R.layout.simple_spinner_item,
@@ -204,6 +239,7 @@ class ExpenseListFragment : Fragment() {
                 }
             }
         }
+
 
         @SuppressLint("SetTextI18n", "NotifyDataSetChanged")
         private fun newcurrencySelected(avaliablecur: String) {
@@ -234,37 +270,7 @@ class ExpenseListFragment : Fragment() {
             }
         }
 
-//toggle listener for currency conversion switch
-        currencyConvSwitch.setOnCheckedChangeListener { _, enabled ->
-            if (enabled) {
-                val chosenCurrency = spinnerCurrency.selectedItem?.toString() ?: "cad"
-                currencyConv(chosenCurrency)
-            } else {
-                for (index in expenseList.indices) {
-                    val original = expenseList[index]
-                    expenseList[index] = Expense(
-                        original.name,
-                        original.amount,
-                        original.date,
-                        "cad",
-                        original.amount
-                    )
-                }
-                expenseAdapter.notifyDataSetChanged()
-                CurrencyConvText.text = "Converted Cost: ${expenseList.sumOf { it.amount }} CAD"
-            }
-        }
 
-//listener for currency selection from dropdown
-        spinnerCurrency.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-            override fun onItemSelected(
-                parent: AdapterView<*>?, view: View?, pos: Int, id: Long
-            ) {
-                if (currencyConvSwitch.isChecked) {
-                    val activeCurrency = spinnerCurrency.selectedItem.toString()
-                    newcurrencySelected(activeCurrency)
-                }
-            }
 
             override fun onNothingSelected(parent: AdapterView<*>?) {
 
