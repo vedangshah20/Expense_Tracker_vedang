@@ -8,8 +8,9 @@ import android.widget.Button
 import android.widget.TextView
 import androidx.navigation.NavController
 import androidx.recyclerview.widget.RecyclerView
+import java.util.Currency
 
-data class Expense(val name: String, val amount: Double, val date: String)
+data class Expense(val name: String, val amount: Double, val date: String,val currency: Currency,val convertedCost: Double)
 
 class ExpenseAdapter(
     private val expenseList: MutableList<Expense>,
