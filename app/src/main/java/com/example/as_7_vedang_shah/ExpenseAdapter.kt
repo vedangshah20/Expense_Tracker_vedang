@@ -35,7 +35,8 @@ class ExpenseAdapter(
     override fun onBindViewHolder(holder: ExpenseListHolder, position: Int) {
         val expense = expenseList[position]
         holder.expenseName.text = expense.name
-        holder.expenseAmount.text = "$${expense.amount}"
+        holder.expenseAmount.text = "Original: $${expense.amount} ${expense.currency.currencyCode}\n" +
+                "Converted: %.2f %s".format(expense.convertedCost, expense.currency.currencyCode)
         holder.expenseDate.text = expense.date
 
         // Show Details button
@@ -43,6 +44,7 @@ class ExpenseAdapter(
             val bundle = Bundle().apply {
                 putString("name", expense.name)
                 putString("amount", expense.amount.toString())
+                putString("expense_currency", expense.currency.currencyCode)
                 putString("date", expense.date)
             }
             navController.navigate(R.id.action_expenseListFragment_to_expenseDetailsFragment, bundle)
